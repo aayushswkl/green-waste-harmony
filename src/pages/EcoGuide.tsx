@@ -4,7 +4,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Recycle, Trash2, LeafyGreen, AlertTriangle, PackagePlus, Loader2, BatteryCharging, Newspaper, Utensils, Bottles, Coffee, Gift } from 'lucide-react';
+import { Recycle, Trash2, LeafyGreen, AlertTriangle, PackagePlus, Loader2, BatteryCharging, Newspaper, Utensils, Wine, Coffee, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const wasteTypes = [
@@ -17,7 +17,7 @@ const wasteTypes = [
     description: 'Materials that can be processed and reused',
     items: [
       { icon: Newspaper, name: 'Paper & Cardboard', examples: 'Newspapers, magazines, office paper, cardboard boxes, paper bags' },
-      { icon: Bottles, name: 'Glass', examples: 'Bottles, jars, clear or colored glass containers' },
+      { icon: Wine, name: 'Glass', examples: 'Bottles, jars, clear or colored glass containers' },
       { icon: PackagePlus, name: 'Plastic', examples: 'Bottles, containers with recycling symbols 1-7, clean food containers' },
       { icon: Coffee, name: 'Metal', examples: 'Aluminum cans, steel cans, clean foil, metal lids' },
     ],
@@ -92,7 +92,7 @@ const reductionTips = [
   {
     title: 'Reduce Single-Use Plastics',
     description: 'Replace disposable items with reusable alternatives like water bottles, grocery bags, and food containers.',
-    icon: Bottles,
+    icon: Wine,
     color: 'text-blue-500',
     bgColor: 'bg-blue-100',
   },
