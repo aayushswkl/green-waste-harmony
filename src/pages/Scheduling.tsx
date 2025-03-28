@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Calendar as CalendarIcon, CheckCircle, ClipboardList, Plus, RecycleIcon, LeafyGreen, Trash2, Package, CalendarDays, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import CompleteCollectionButton from '@/components/scheduling/CompleteCollectionButton';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Sample data for scheduled collections
 const regularCollections = [
@@ -25,6 +28,7 @@ const regularCollections = [
     frequency: 'Weekly',
     day: 'Monday',
     nextDate: '2023-11-20',
+    completed: false
   },
   {
     id: 2,
@@ -35,6 +39,7 @@ const regularCollections = [
     frequency: 'Weekly',
     day: 'Wednesday',
     nextDate: '2023-11-15',
+    completed: false
   },
   {
     id: 3,
@@ -45,6 +50,7 @@ const regularCollections = [
     frequency: 'Weekly',
     day: 'Friday',
     nextDate: '2023-11-17',
+    completed: false
   }
 ];
 
@@ -58,6 +64,7 @@ const specialCollections = [
     date: '2023-11-25',
     status: 'Confirmed',
     notes: 'Old furniture and large appliances',
+    completed: false
   },
   {
     id: 5,
@@ -68,6 +75,7 @@ const specialCollections = [
     date: '2023-12-10',
     status: 'Pending',
     notes: 'Batteries, paint cans, and electronics',
+    completed: false
   }
 ];
 
@@ -93,6 +101,9 @@ const Scheduling = () => {
   const [date, setDate] = useState<Date>(new Date());
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedEvents, setSelectedEvents] = useState<any[]>([]);
+  const [regularCollectionsState, setRegularCollectionsState] = useState(regularCollections);
+  const [specialCollectionsState, setSpecialCollectionsState] = useState(specialCollections);
+  const { user } = useAuth();
   
   // Handle date selection in calendar
   const handleDateSelect = (selectedDate: Date) => {
@@ -114,6 +125,27 @@ const Scheduling = () => {
       description: 'You will receive a confirmation notification.',
     });
     setOpenDialog(false);
+  };
+
+  // Handle marking a collection as complete
+  const handleCompleteRegularCollection = (collectionId: number) => {
+    setRegularCollectionsState(prev => 
+      prev.map(collection => 
+        collection.id === collectionId
+          ? { ...collection, completed: true }
+          : collection
+      )
+    );
+  };
+
+  const handleCompleteSpecialCollection = (collectionId: number) => {
+    setSpecialCollectionsState(prev => 
+      prev.map(collection => 
+        collection.id === collectionId
+          ? { ...collection, completed: true, status: 'Completed' }
+          : collection
+      )
+    );
   };
 
   return (
@@ -332,13 +364,19 @@ const Scheduling = () => {
             
             <TabsContent value="regular">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {regularCollections.map((collection) => (
+                {regularCollectionsState.map((collection) => (
                   <Card key={collection.id}>
                     <CardHeader className={`${collection.bgColor}`}>
                       <div className="flex items-center gap-2">
                         <collection.icon className={`h-5 w-5 ${collection.color}`} />
                         <CardTitle className="text-lg">{collection.type}</CardTitle>
                       </div>
+                      {collection.completed && (
+                        <Badge variant="outline" className="ml-auto bg-green-100 text-green-800 border-green-200">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Completed
+                        </Badge>
+                      )}
                     </CardHeader>
                     <CardContent className="pt-6">
                       <div className="space-y-4">
@@ -356,9 +394,18 @@ const Scheduling = () => {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <Button variant="outline" size="sm">Modify</Button>
-                      <Button variant="outline" size="sm" className="text-destructive">Pause</Button>
+                    <CardFooter className="flex flex-col gap-2">
+                      {!collection.completed && (
+                        <CompleteCollectionButton 
+                          collectionId={collection.id}
+                          collectionType={collection.type}
+                          onComplete={handleCompleteRegularCollection}
+                        />
+                      )}
+                      <div className="flex justify-between w-full">
+                        <Button variant="outline" size="sm">Modify</Button>
+                        <Button variant="outline" size="sm" className="text-destructive">Pause</Button>
+                      </div>
                     </CardFooter>
                   </Card>
                 ))}
@@ -367,7 +414,7 @@ const Scheduling = () => {
             
             <TabsContent value="special">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {specialCollections.map((collection) => (
+                {specialCollectionsState.map((collection) => (
                   <Card key={collection.id}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -375,11 +422,14 @@ const Scheduling = () => {
                           <collection.icon className={`h-5 w-5 ${collection.color}`} />
                           <CardTitle className="text-lg">{collection.type}</CardTitle>
                         </div>
-                        <Badge variant={collection.status === 'Confirmed' ? 'default' : 'outline'}>
+                        <Badge variant={collection.status === 'Confirmed' ? 'default' : collection.status === 'Completed' ? 'outline' : 'outline'} 
+                          className={collection.status === 'Completed' ? 'bg-green-100 text-green-800 border-green-200' : ''}>
                           {collection.status === 'Confirmed' ? (
                             <CheckCircle className="h-3 w-3 mr-1" />
+                          ) : collection.status === 'Completed' ? (
+                            <CheckCircle className="h-3 w-3 mr-1" />
                           ) : (
-                            <AlertCircle className="h-3 w-3 mr-1" />
+                            <AlertTriangle className="h-3 w-3 mr-1" />
                           )}
                           {collection.status}
                         </Badge>
@@ -397,9 +447,18 @@ const Scheduling = () => {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <Button variant="outline" size="sm">Modify</Button>
-                      <Button variant="outline" size="sm" className="text-destructive">Cancel</Button>
+                    <CardFooter className="flex flex-col gap-2">
+                      {!collection.completed && collection.status === 'Confirmed' && (
+                        <CompleteCollectionButton 
+                          collectionId={collection.id}
+                          collectionType={collection.type}
+                          onComplete={handleCompleteSpecialCollection}
+                        />
+                      )}
+                      <div className="flex justify-between w-full">
+                        <Button variant="outline" size="sm" disabled={collection.status === 'Completed'}>Modify</Button>
+                        <Button variant="outline" size="sm" className="text-destructive" disabled={collection.status === 'Completed'}>Cancel</Button>
+                      </div>
                     </CardFooter>
                   </Card>
                 ))}
